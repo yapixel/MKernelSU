@@ -18,6 +18,7 @@
 
 #define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
+#define NEW_SU_PATH "/data/adb/ksu/bin/su"
 
 extern void escape_to_root();
 
@@ -95,7 +96,6 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
 				 void *argv, void *envp, int *flags)
 {
 	struct filename *filename;
-	const char sh[] = SH_PATH;
 	const char su[] = SU_PATH;
 
 	if (!filename_ptr)
@@ -112,7 +112,8 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
 
 	if (!memcmp(filename->name, su, sizeof(su))) {
 		pr_info("do_execveat_common su found\n");
-		memcpy((void *)filename->name, sh, sizeof(sh));
+        putname(filename);
+        *filename_ptr = getname_kernel(NEW_SU_PATH);
 
 		escape_to_root();
 	}
