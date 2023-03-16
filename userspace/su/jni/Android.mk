@@ -9,3 +9,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := simple_su
 LOCAL_SRC_FILES := simple_su.c
 include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := nsu
+LOCAL_SRC_FILES := new_su.c
+include $(BUILD_EXECUTABLE)
+
