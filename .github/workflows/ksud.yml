@@ -22,6 +22,20 @@ jobs:
         workspaces: userspace/ksud
         cache-targets: false
 
+    - uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r25b
+        local-cache: true
+
+    - name: Build new su
+      working-directory: ./userspace/su
+      run: ndk-build nsu
+
+    - name: Copy su
+      run: |
+          cp ./userspace/su/obj/local/x86_64/nsu ./userspace/ksud/bin/x86_64/su
+          cp ./userspace/su/obj/local/arm64-v8a/nsu ./userspace/ksud/bin/aarch64/su
+
     - name: Install cross
       run: cargo install cross
 
