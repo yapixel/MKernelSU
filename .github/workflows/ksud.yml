@@ -33,6 +33,20 @@ jobs:
     - name: Install cargo-ndk
       run: cargo install cargo-ndk
 
+    - name: Build nsu
+      run: |
+          if [ "${{ inputs.target }}" == "aarch64-linux-android" ]; then
+            abi="arm64-v8a"
+            abi2="aarch64"
+          elif [ "${{ inputs.target }}" == "x86_64-linux-android" ]; then
+            abi="x86_64"
+            abi2="x86_64"
+          fi
+          cd ./userspace/su/
+          ndk-build APP_ABI=$abi nsu
+          cd ../../
+          cp ./userspace/su/obj/local/$abi/nsu ./userspace/ksud/bin/$abi2/su
+
     - name: Build ksud
       run: cargo ndk --target ${{ inputs.target }} --bindgen build --release 
       working-directory: ./userspace/ksud
