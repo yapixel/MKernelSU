@@ -22,11 +22,22 @@ jobs:
         workspaces: userspace/ksud
         cache-targets: false
 
-    - name: Install cross
-      run: cargo install cross
+    - uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r25c
+
+    - name: Install toolchain
+      run: rustup target add ${{ inputs.target }}
+
+    - name: Install cargo-ndk
+      run: cargo install cargo-ndk
 
     - name: Build ksud
-      run: cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/ksud/Cargo.toml
+      run: cargo ndk --target ${{ inputs.target }} --bindgen build --release 
+      working-directory: ./userspace/ksud
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
     - name: Upload ksud artifact
       uses: actions/upload-artifact@v3
