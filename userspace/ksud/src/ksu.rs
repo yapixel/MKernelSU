@@ -1,4 +1,5 @@
-use anyhow::Result;
+use std::ffi::{c_char, CStr};
+use anyhow::{bail, Result};
 
 #[cfg(unix)]
 use anyhow::ensure;
@@ -17,6 +18,7 @@ const CMD_GET_VERSION: u64 = 2;
 const CMD_REPORT_EVENT: u64 = 7;
 pub const CMD_SET_SEPOLICY: u64 = 8;
 pub const CMD_CHECK_SAFEMODE: u64 = 9;
+const CMD_GET_PATH: u64 = 10;
 
 const EVENT_POST_FS_DATA: u64 = 1;
 const EVENT_BOOT_COMPLETED: u64 = 2;
@@ -92,4 +94,24 @@ pub fn report_post_fs_data() {
 
 pub fn report_boot_complete() {
     report_event(EVENT_BOOT_COMPLETED);
+}
+
+pub fn get_path() -> Result<String> {
+    let mut result: i32 = 0;
+    let mut buf = vec![0 as c_char; 64];
+    unsafe {
+        #[allow(clippy::cast_possible_wrap)]
+        libc::prctl(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_GET_PATH,
+            buf.as_mut_ptr(),
+            0,
+            std::ptr::addr_of_mut!(result).cast::<libc::c_void>(),
+        );
+        if result != KERNEL_SU_OPTION as i32 {
+            bail!("failed to get ksu path")
+        }
+        let c = CStr::from_ptr(buf.as_ptr());
+        Ok(c.to_str().unwrap().to_owned())
+    }
 }

@@ -122,6 +122,10 @@ pub fn on_post_data_fs() -> Result<()> {
 
     utils::umask(0);
 
+    if let Err(e) = assets::extract_su() {
+        warn!("failed to extract su: {}", e)
+    }
+
     let module_update_img = defs::MODULE_UPDATE_IMG;
     let module_img = defs::MODULE_IMG;
     let module_dir = defs::MODULE_DIR;
