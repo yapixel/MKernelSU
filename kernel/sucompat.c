@@ -15,12 +15,13 @@
 #include "allowlist.h"
 #include "arch.h"
 #include "klog.h" // IWYU pragma: keep
+#include "ksu.h"
 
 #define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
-#define NEW_SU_PATH "/data/adb/ksu/bin/su"
 
-extern void escape_to_root();
+static char real_su_path[128];
+static int real_su_path_len = 0;
 
 static void __user *userspace_stack_buffer(const void *d, size_t len)
 {
@@ -31,11 +32,25 @@ static void __user *userspace_stack_buffer(const void *d, size_t len)
 	return copy_to_user(p, d, len) ? NULL : p;
 }
 
-static char __user *sh_user_path(void)
-{
-	static const char sh_path[] = "/system/bin/sh";
+void init_sucompat_path(void) {
+	if (real_su_path_len <= 0 || real_su_path_len >= 128) {
+		real_su_path_len = snprintf(real_su_path, sizeof(real_su_path), "%s/bin/su", ksu_random_path);
+	}
 
-	return userspace_stack_buffer(sh_path, sizeof(sh_path));
+	if (real_su_path_len <= 0 || real_su_path_len >= 128) {
+		pr_err("failed to get real su path, len=", real_su_path_len);
+	} else {
+		pr_info("real su path(%d): %s", real_su_path_len, real_su_path);
+	}
+}
+
+static char __user *real_su_user_path(void)
+{
+	if (real_su_path_len <= 0 || real_su_path_len >= 128) {
+		return NULL;
+	} else {
+		return userspace_stack_buffer(real_su_path, real_su_path_len + 1);
+	}
 }
 
 int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
@@ -55,7 +70,7 @@ int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
 	}
 	if (!memcmp(filename->name, su, sizeof(su))) {
 		pr_info("faccessat su->sh!\n");
-		*filename_user = sh_user_path();
+		*filename_user = real_su_user_path();
 	}
 
 	putname(filename);
@@ -84,7 +99,7 @@ int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags)
 	}
 	if (!memcmp(filename->name, su, sizeof(su))) {
 		pr_info("newfstatat su->sh!\n");
-		*filename_user = sh_user_path();
+		*filename_user = real_su_user_path();
 	}
 
 	putname(filename);
@@ -112,10 +127,10 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
 
 	if (!memcmp(filename->name, su, sizeof(su))) {
 		pr_info("do_execveat_common su found\n");
-        putname(filename);
-        *filename_ptr = getname_kernel(NEW_SU_PATH);
-
-		escape_to_root();
+		if (real_su_path_len > 0 && real_su_path_len < 128) {
+			putname(filename);
+			*filename_ptr = getname_kernel(real_su_path);
+		}
 	}
 
 	return 0;

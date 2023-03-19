@@ -22,9 +22,12 @@
 #define CMD_REPORT_EVENT 7
 #define CMD_SET_SEPOLICY 8
 #define CMD_CHECK_SAFEMODE 9
+#define CMD_GET_PATH 10
 
 #define EVENT_POST_FS_DATA 1
 #define EVENT_BOOT_COMPLETED 2
+
+extern char ksu_random_path[64];
 
 bool ksu_queue_work(struct work_struct *work);
 

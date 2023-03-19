@@ -33,6 +33,22 @@ int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 extern void ksu_enable_sucompat();
 extern void ksu_enable_ksud();
 
+char ksu_random_path[64];
+
+// get random string
+static void get_random_string(char *buf, int len)
+{
+	static char *hex = "0123456789abcdef";
+	unsigned char byte;
+	int i;
+	for (i = 0; i < len; i++) {
+		get_random_bytes(&byte, 1);
+		buf[i] = hex[byte % 16];
+	}
+}
+
+extern void init_sucompat_path(void);
+
 int __init kernelsu_init(void)
 {
 #ifdef CONFIG_KSU_DEBUG
@@ -59,6 +75,12 @@ int __init kernelsu_init(void)
 #else
 #warning("KPROBES is disabled, KernelSU may not work, please check https://kernelsu.org/guide/how-to-integrate-for-non-gki.html")
 #endif
+
+	char buf[64];
+	get_random_string(buf, 32);
+	snprintf(ksu_random_path, sizeof(ksu_random_path), "/dev/ksu_%s", buf);
+	pr_info("ksu_random_path: %s\n", ksu_random_path);
+	init_sucompat_path();
 
 	return 0;
 }
