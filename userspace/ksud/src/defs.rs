@@ -17,6 +17,9 @@ pub const MAGISKBOOT_PATH: &str = concatcp!(BINARY_DIR, "magiskboot");
 #[cfg(target_os = "android")]
 pub const DAEMON_LINK_PATH: &str = concatcp!(BINARY_DIR, "ksud");
 
+#[cfg(target_os = "android")]
+pub const CMD_LINK_PATH: &str = concatcp!(BINARY_DIR, "cmd");
+
 pub const MODULE_DIR: &str = concatcp!(ADB_DIR, "modules/");
 pub const MODULE_IMG: &str = concatcp!(WORKING_DIR, "modules.img");
 pub const MODULE_UPDATE_IMG: &str = concatcp!(WORKING_DIR, "modules_update.img");

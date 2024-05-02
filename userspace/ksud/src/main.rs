@@ -2,6 +2,7 @@ mod apk_sign;
 mod assets;
 mod boot_patch;
 mod cli;
+mod cmd;
 mod debug;
 mod defs;
 mod init_event;

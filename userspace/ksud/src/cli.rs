@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 use clap::Parser;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[cfg(target_os = "android")]
 use android_logger::Config;
@@ -283,9 +283,15 @@ pub fn run() -> Result<()> {
 
     // the kernel executes su with argv[0] = "su" and replace it with us
     let arg0 = std::env::args().next().unwrap_or_default();
-    if arg0 == "su" || arg0 == "/system/bin/su" {
-        return crate::su::root_shell();
-    }
+    match Path::new(&arg0).file_name().and_then(|x| x.to_str()) {
+        Some("su") => {
+            return crate::su::root_shell();
+        }
+        Some("cmd") => {
+            crate::cmd::cmd_wrapper();
+        }
+        _ => {}
+    };
 
     let cli = Args::parse();
 

@@ -11,6 +11,7 @@ use crate::{
     utils::{self, umask},
 };
 
+use crate::utils::is_terminal;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use rustix::{
     process::getuid,
@@ -294,7 +295,11 @@ fn add_path_to_env(path: &str) -> Result<()> {
     let mut paths =
         env::var_os("PATH").map_or(Vec::new(), |val| env::split_paths(&val).collect::<Vec<_>>());
     let new_path = PathBuf::from(path.trim_end_matches('/'));
-    paths.push(new_path);
+    if is_terminal() {
+        paths.insert(0, new_path);
+    } else {
+        paths.push(new_path);
+    }
     let new_path_env = env::join_paths(paths)?;
     env::set_var("PATH", new_path_env);
     Ok(())

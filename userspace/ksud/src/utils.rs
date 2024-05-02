@@ -17,11 +17,12 @@ use std::fs::{set_permissions, Permissions};
 use std::os::unix::prelude::PermissionsExt;
 
 use hole_punch::*;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{stderr, stdin, stdout, Read, Seek, SeekFrom};
 
 use jwalk::WalkDir;
 use std::path::PathBuf;
 
+use rustix::termios::isatty;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use rustix::{
     process,
@@ -202,8 +203,14 @@ pub fn get_tmp_path() -> &'static str {
 fn link_ksud_to_bin() -> Result<()> {
     let ksu_bin = PathBuf::from(defs::DAEMON_PATH);
     let ksu_bin_link = PathBuf::from(defs::DAEMON_LINK_PATH);
-    if ksu_bin.exists() && !ksu_bin_link.exists() {
-        std::os::unix::fs::symlink(&ksu_bin, &ksu_bin_link)?;
+    let ksu_cmd_link = PathBuf::from(defs::CMD_LINK_PATH);
+    if ksu_bin.exists() {
+        if !ksu_bin_link.exists() {
+            std::os::unix::fs::symlink(&ksu_bin, &ksu_bin_link)?;
+        }
+        if !ksu_cmd_link.exists() {
+            std::os::unix::fs::symlink(&ksu_bin, &ksu_cmd_link)?;
+        }
     }
     Ok(())
 }
@@ -395,4 +402,11 @@ pub fn copy_module_files(source: impl AsRef<Path>, destination: impl AsRef<Path>
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
 pub fn copy_module_files(_source: impl AsRef<Path>, _destination: impl AsRef<Path>) -> Result<()> {
     unimplemented!()
+}
+
+pub fn is_terminal() -> bool {
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    return isatty(stdin()) || isatty(stdout()) || isatty(stderr());
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    return false;
 }
