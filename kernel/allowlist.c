@@ -8,6 +8,7 @@
 #include <linux/types.h>
 #include <linux/version.h>
 #include <linux/compiler_types.h>
+#include <linux/capabilities.h>
 
 #include "ksu.h"
 #include "klog.h" // IWYU pragma: keep
@@ -62,12 +63,12 @@ static void remove_uid_from_arr(uid_t uid)
 
 static void init_default_profiles()
 {
+	kernel_cap_t full_cap = CAP_FULL_SET;
 	default_root_profile.uid = 0;
 	default_root_profile.gid = 0;
 	default_root_profile.groups_count = 1;
 	default_root_profile.groups[0] = 0;
-	memset(&default_root_profile.capabilities, 0xff,
-	       sizeof(default_root_profile.capabilities));
+	memcpy(&default_root_profile.capabilities, &full_cap, sizeof(default_root_profile.capabilities));
 	default_root_profile.namespaces = 0;
 	strcpy(default_root_profile.selinux_domain, KSU_DEFAULT_SELINUX_DOMAIN);
 
