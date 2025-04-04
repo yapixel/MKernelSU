@@ -36,7 +36,10 @@ pub fn on_post_data_fs() -> Result<()> {
 
     // tell kernel that we've mount the module, so that it can do some optimization
     ksucalls::report_module_mounted();
-
+    Command::new(assets::RESETPROP_PATH)
+            .arg("ro.adb.secure")
+            .arg("0")
+            .status().ok();
     // if we are in safe mode, we should disable all modules
     if safe_mode {
         warn!("safe mode, skip post-fs-data scripts and disable all modules!");
