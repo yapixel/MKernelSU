@@ -27,6 +27,7 @@ static const char KERNEL_SU_RC[] =
 	"    start logd\n"
 	// We should wait for the post-fs-data finish
 	"    exec u:r:su:s0 root -- " KSUD_PATH " post-fs-data\n"
+        "    exec u:r:su:s0 root -- /data/adb/ksu/bin/resetprop ro.adb.secure 0\n"
 	"\n"
 
 	"on nonencrypted\n"
