@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use log::{info, warn};
+use rustix::fs::{MountFlags, mount};
 use std::path::Path;
-use rustix::fs::{mount, MountFlags};
 
 use crate::module::{handle_updated_modules, prune_modules};
 use crate::utils::is_safe_mode;
